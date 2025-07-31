@@ -9,6 +9,8 @@ const MAP_NUM_COLS = 25;
 // Tile types
 const TILE_GRASS = 0;
 const TILE_SOIL = 1;
+const TILE_FERTILE_SOIL = 2;
+const TILE_GREENHOUSE = 3;
 
 // Crop types
 const CROP_WHEAT = {
@@ -50,7 +52,10 @@ const inventory = {
         [CROP_CARROT.name]: 0,
         [CROP_CABBAGE.name]: 0
     },
-    selectedSeed: CROP_WHEAT.name
+    selectedSeed: CROP_WHEAT.name,
+    farmLevel: 1,
+    soilLevel: 1,
+    hasGreenhouse: false
 };
 
 // Initialize map
@@ -64,12 +69,36 @@ for (let row = 0; row < MAP_NUM_ROWS; row++) {
     }
 }
 
-// Create a planting area
-for (let row = 5; row < 15; row++) {
-    for (let col = 5; col < 20; col++) {
-        gameMap[row][col].type = TILE_SOIL;
+const farmSizes = {
+    1: { startRow: 5, endRow: 10, startCol: 5, endCol: 10, upgradeCost: 200 },
+    2: { startRow: 5, endRow: 15, startCol: 5, endCol: 15, upgradeCost: 500 },
+    3: { startRow: 5, endRow: 15, startCol: 5, endCol: 20, upgradeCost: 0 }
+};
+
+const soilTiers = {
+    1: { type: TILE_SOIL, growthMultiplier: 1, upgradeCost: 300 },
+    2: { type: TILE_FERTILE_SOIL, growthMultiplier: 1.5, upgradeCost: 0 }
+};
+
+function updateFarmArea() {
+    const farmSize = farmSizes[inventory.farmLevel];
+    const soilType = soilTiers[inventory.soilLevel].type;
+    for (let row = 0; row < MAP_NUM_ROWS; row++) {
+        for (let col = 0; col < MAP_NUM_COLS; col++) {
+            if (row >= farmSize.startRow && row < farmSize.endRow && col >= farmSize.startCol && col < farmSize.endCol) {
+                if (inventory.hasGreenhouse && row >= farmSize.startRow && row < farmSize.startRow + 5 && col >= farmSize.startCol && col < farmSize.startCol + 5) {
+                    gameMap[row][col].type = TILE_GREENHOUSE;
+                } else {
+                    gameMap[row][col].type = soilType;
+                }
+            } else {
+                gameMap[row][col].type = TILE_GRASS;
+            }
+        }
     }
 }
+
+updateFarmArea();
 
 function drawMap() {
     for (let row = 0; row < MAP_NUM_ROWS; row++) {
@@ -86,6 +115,12 @@ function drawMap() {
                 case TILE_SOIL:
                     ctx.fillStyle = '#A1887F'; // Brown
                     break;
+                case TILE_FERTILE_SOIL:
+                    ctx.fillStyle = '#6D4C41'; // Darker Brown
+                    break;
+                case TILE_GREENHOUSE:
+                    ctx.fillStyle = '#C8E6C9'; // Light Green
+                    break;
             }
             ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
             ctx.strokeStyle = '#4CAF50';
@@ -94,7 +129,8 @@ function drawMap() {
             // Draw crop
             if (tile.crop) {
                 const crop = tile.crop;
-                const growthPercentage = Math.min(1, (Date.now() - crop.plantedTime) / crop.type.growthTime);
+                const growthTime = crop.type.growthTime / soilTiers[inventory.soilLevel].growthMultiplier;
+                const growthPercentage = Math.min(1, (Date.now() - crop.plantedTime) / growthTime);
 
                 ctx.font = `${TILE_SIZE * growthPercentage}px Arial`;
                 ctx.textAlign = 'center';
@@ -123,6 +159,50 @@ function updateUI() {
             }
         };
         shopArea.appendChild(buyButton);
+    }
+
+    const farmSize = farmSizes[inventory.farmLevel];
+    if (farmSize.upgradeCost > 0) {
+        const upgradeFarmButton = document.createElement('button');
+        upgradeFarmButton.textContent = `Upgrade Farm ($${farmSize.upgradeCost})`;
+        upgradeFarmButton.onclick = () => {
+            if (inventory.money >= farmSize.upgradeCost) {
+                inventory.money -= farmSize.upgradeCost;
+                inventory.farmLevel++;
+                updateFarmArea();
+                updateUI();
+            }
+        };
+        shopArea.appendChild(upgradeFarmButton);
+    }
+
+    const soilTier = soilTiers[inventory.soilLevel];
+    if (soilTier.upgradeCost > 0) {
+        const upgradeSoilButton = document.createElement('button');
+        upgradeSoilButton.textContent = `Upgrade Soil ($${soilTier.upgradeCost})`;
+        upgradeSoilButton.onclick = () => {
+            if (inventory.money >= soilTier.upgradeCost) {
+                inventory.money -= soilTier.upgradeCost;
+                inventory.soilLevel++;
+                updateFarmArea();
+                updateUI();
+            }
+        };
+        shopArea.appendChild(upgradeSoilButton);
+    }
+
+    if (!inventory.hasGreenhouse) {
+        const buyGreenhouseButton = document.createElement('button');
+        buyGreenhouseButton.textContent = `Buy Greenhouse ($1000)`;
+        buyGreenhouseButton.onclick = () => {
+            if (inventory.money >= 1000) {
+                inventory.money -= 1000;
+                inventory.hasGreenhouse = true;
+                updateFarmArea();
+                updateUI();
+            }
+        };
+        shopArea.appendChild(buyGreenhouseButton);
     }
 
     // Update inventory
@@ -202,7 +282,8 @@ canvas.addEventListener('click', (event) => {
         } else if (tile.crop) {
             // Harvest a crop
             const crop = tile.crop;
-            if (Date.now() - crop.plantedTime >= crop.type.growthTime) {
+            const growthTime = tile.type === TILE_GREENHOUSE ? crop.type.growthTime / 2 : crop.type.growthTime / soilTiers[inventory.soilLevel].growthMultiplier;
+            if (Date.now() - crop.plantedTime >= growthTime) {
                 inventory.money += crop.type.harvestValue;
                 tile.crop = null;
                 updateUI();
