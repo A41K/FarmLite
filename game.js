@@ -10,6 +10,18 @@ const MAP_NUM_COLS = 25;
 const TILE_GRASS = 0;
 const TILE_SOIL = 1;
 const TILE_FERTILE_SOIL = 2;
+
+// Greenhouse properties
+let greenhouse = {
+    x: 5,
+    y: 5,
+    width: 5,
+    height: 5,
+    isDragging: false,
+    dragStartX: 0,
+    dragStartY: 0
+};
+
 const TILE_GREENHOUSE = 3;
 
 // Crop types
@@ -86,7 +98,7 @@ function updateFarmArea() {
     for (let row = 0; row < MAP_NUM_ROWS; row++) {
         for (let col = 0; col < MAP_NUM_COLS; col++) {
             if (row >= farmSize.startRow && row < farmSize.endRow && col >= farmSize.startCol && col < farmSize.endCol) {
-                if (inventory.hasGreenhouse && row >= farmSize.startRow && row < farmSize.startRow + 5 && col >= farmSize.startCol && col < farmSize.startCol + 5) {
+                if (inventory.hasGreenhouse && row >= greenhouse.y && row < greenhouse.y + greenhouse.height && col >= greenhouse.x && col < greenhouse.x + greenhouse.width) {
                     gameMap[row][col].type = TILE_GREENHOUSE;
                 } else {
                     gameMap[row][col].type = soilType;
@@ -140,6 +152,44 @@ function drawMap() {
         }
     }
 }
+
+canvas.addEventListener('mousedown', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    const tileX = Math.floor(mouseX / TILE_SIZE);
+    const tileY = Math.floor(mouseY / TILE_SIZE);
+
+    if (inventory.hasGreenhouse && tileX >= greenhouse.x && tileX < greenhouse.x + greenhouse.width && tileY >= greenhouse.y && tileY < greenhouse.y + greenhouse.height) {
+        greenhouse.isDragging = true;
+        greenhouse.dragStartX = mouseX - greenhouse.x * TILE_SIZE;
+        greenhouse.dragStartY = mouseY - greenhouse.y * TILE_SIZE;
+    }
+});
+
+canvas.addEventListener('mousemove', (e) => {
+    if (greenhouse.isDragging) {
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+        const newTileX = Math.floor((mouseX - greenhouse.dragStartX) / TILE_SIZE);
+        const newTileY = Math.floor((mouseY - greenhouse.dragStartY) / TILE_SIZE);
+
+        const farmSize = farmSizes[inventory.farmLevel];
+        const clampedX = Math.max(farmSize.startCol, Math.min(newTileX, farmSize.endCol - greenhouse.width));
+        const clampedY = Math.max(farmSize.startRow, Math.min(newTileY, farmSize.endRow - greenhouse.height));
+
+        if (greenhouse.x !== clampedX || greenhouse.y !== clampedY) {
+            greenhouse.x = clampedX;
+            greenhouse.y = clampedY;
+            updateFarmArea();
+        }
+    }
+});
+
+canvas.addEventListener('mouseup', () => {
+    greenhouse.isDragging = false;
+});
 
 function updateUI() {
     const shopArea = document.getElementById('shop-area');
