@@ -469,21 +469,21 @@
     <script>
         // Game state
         let gameState = {
-            money: 100,
+            money: 200,
             level: 1,
             lastSaved: Date.now(),
             plots: [
                 { id: 0, unlocked: true, cropId: null, soilType: 'basic', plantedTime: 0, growthProgress: 0 }
             ],
             soilTypes: {
-                basic: { name: 'Basic Soil', growthMultiplier: 1, unlocked: true },
-                fertile: { name: 'Fertile Soil', growthMultiplier: 1.5, unlocked: false },
-                rich: { name: 'Rich Soil', growthMultiplier: 2, unlocked: false },
-                premium: { name: 'Premium Soil', growthMultiplier: 3, unlocked: false }
+                basic: { name: 'Basic Soil', growthMultiplier: 3, unlocked: true },
+                fertile: { name: 'Fertile Soil', growthMultiplier: 3.5, unlocked: false },
+                rich: { name: 'Rich Soil', growthMultiplier: 6, unlocked: false },
+                premium: { name: 'Premium Soil', growthMultiplier: 9, unlocked: false }
             },
             upgrades: {
-                plotUnlock: { level: 0, cost: 300, maxLevel: 9 },
-                soilFertile: { level: 0, cost: 500, maxLevel: 1 },
+                plotUnlock: { level: 0, cost: 200, maxLevel: 9 },
+                soilFertile: { level: 0, cost: 400, maxLevel: 1 },
                 soilRich: { level: 0, cost: 2000, maxLevel: 1 },
                 soilPremium: { level: 0, cost: 5000, maxLevel: 1 },
                 offlineBonus: { level: 0, cost: 1000, maxLevel: 5 }
@@ -493,10 +493,10 @@
         // Define crops - each tier has different growth times and profits
         const crops = {
     // Tier 1 - Basic Starter Crops
-    wheat: { id: 'wheat', name: 'Wheat', icon: '🌾', growTime: 30, cost: 10, sellPrice: 25, tier: 1, unlockLevel: 1 },
-    carrot: { id: 'carrot', name: 'Carrot', icon: '🥕', growTime: 60, cost: 20, sellPrice: 60, tier: 1, unlockLevel: 1 },
-    potato: { id: 'potato', name: 'Potato', icon: '🥔', growTime: 90, cost: 30, sellPrice: 100, tier: 1, unlockLevel: 1 },
-    lettuce: { id: 'lettuce', name: 'Lettuce', icon: '🥬', growTime: 45, cost: 15, sellPrice: 40, tier: 1, unlockLevel: 1 },
+    wheat: { id: 'wheat', name: 'Wheat', icon: '🌾', growTime: 15, cost: 10, sellPrice: 25, tier: 1, unlockLevel: 1 },
+    carrot: { id: 'carrot', name: 'Carrot', icon: '🥕', growTime: 30, cost: 20, sellPrice: 60, tier: 1, unlockLevel: 1 },
+    potato: { id: 'potato', name: 'Potato', icon: '🥔', growTime: 45, cost: 30, sellPrice: 100, tier: 1, unlockLevel: 1 },
+    lettuce: { id: 'lettuce', name: 'Lettuce', icon: '🥬', growTime: 25, cost: 15, sellPrice: 40, tier: 1, unlockLevel: 1 },
     
     // Tier 2 - Advanced Crops
     tomato: { id: 'tomato', name: 'Tomato', icon: '🍅', growTime: 120, cost: 50, sellPrice: 150, tier: 2, unlockLevel: 2 },
