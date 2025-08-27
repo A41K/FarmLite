@@ -1117,8 +1117,33 @@ function updatePlotUI(plotId) {
         
         function resetGame() {
             if (confirm('Are you sure you want to reset all progress? This cannot be undone!')) {
-                localStorage.removeItem('cropCommanderSave');
-                location.reload();
+                localStorage.clear();
+                gameState = {
+                    money: 200,
+                    level: 1,
+                    lastSaved: Date.now(),
+                    plots: [
+                        { id: 0, unlocked: true, cropId: null, soilType: 'basic', plantedTime: 0, growthProgress: 0 }
+                    ],
+                    soilTypes: {
+                        basic: { name: 'Basic Soil', growthMultiplier: 3, unlocked: true },
+                        fertile: { name: 'Fertile Soil', growthMultiplier: 3.5, unlocked: false },
+                        rich: { name: 'Rich Soil', growthMultiplier: 6, unlocked: false },
+                        premium: { name: 'Premium Soil', growthMultiplier: 9, unlocked: false }
+                    },
+                    upgrades: {
+                        plotUnlock: { level: 0, cost: 200, maxLevel: 9 },
+                        soilFertile: { level: 0, cost: 400, maxLevel: 1 },
+                        soilRich: { level: 0, cost: 2000, maxLevel: 1 },
+                        soilPremium: { level: 0, cost: 5000, maxLevel: 1 },
+                        offlineBonus: { level: 0, cost: 1000, maxLevel: 5 }
+                    }
+                };
+                renderPlots();
+                renderShop();
+                renderUpgrades();
+                updateUI();
+                showNotification('Game progress reset successfully!');
             }
         }
         
